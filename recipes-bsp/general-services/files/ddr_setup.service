@@ -1,0 +1,16 @@
+[Unit]
+Description=Run devmem commands at startup
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/sbin/devmem 0xB0040404 w 0x5A000000
+ExecStart=/usr/sbin/devmem 0xB0040408 w 0x5A000000
+ExecStart=/usr/sbin/devmem 0xB004040C w 0x00000000
+ExecStart=/usr/sbin/devmem 0xB00C0000 w 0x00000001
+ExecStart=/usr/sbin/devmem 0xB00D0000 w 0x00000001
+ExecStart=/usr/sbin/devmem 0xB0020000 w 0x00000000
+
+[Install]
+WantedBy=multi-user.target

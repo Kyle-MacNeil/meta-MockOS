@@ -1,0 +1,18 @@
+
+---
+ include/configs/imx8mp_var_dart.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/configs/x.h b/include/configs/x.h
+index 89e31832662..ffb79eedc36 100644
+--- a/include/configs/x.h
++++ b/include/configs/x.h
+@@ -66,7 +66,7 @@
+ 	"fdt_high=0xffffffffffffffff\0"		\
+ 	"boot_fdt=try\0" \
+ 	"boot_fit=no\0" \
+-	"fdt_file=undefined\0" \
++	"fdt_file=custom-device-tree.dtb\0" \
+ 	"bootm_size=0x10000000\0" \
+ 	"ip_dyn=yes\0" \
+ 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \

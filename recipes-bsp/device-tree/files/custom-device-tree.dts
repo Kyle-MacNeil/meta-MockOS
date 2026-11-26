@@ -1,0 +1,295 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "generic-som.dtsi"
+
+/ {
+	model = "Generic SOM on Generic Carrier Board";
+
+	chosen {
+		stdout-path = &uart0;
+	};
+
+	clocks {
+		clk_ext: external-clock {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <25000000>;
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		status = "okay";
+
+		power-key {
+			label = "Power Button";
+			linux,code = <116>; /* KEY_POWER */
+			gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
+			gpio-key,wakeup;
+		};
+	};
+
+	reg_sd_vmmc: regulator-sd-vmmc {
+		compatible = "regulator-fixed";
+		regulator-name = "SD_3V3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio0 1 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	reg_sd_vqmmc: regulator-sd-vqmmc {
+		compatible = "regulator-gpio";
+		regulator-name = "SD_VSEL";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+		gpios-states = <1>;
+		states = <3300000 0
+			  1800000 1>;
+	};
+
+	reg_eth_phy: regulator-eth-phy {
+		compatible = "regulator-fixed";
+		regulator-name = "eth-phy-supply";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+
+	reg_spi_vcc: regulator-spi-vcc {
+		compatible = "regulator-fixed";
+		regulator-name = "spi-device-supply";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	sound_hdmi: sound-hdmi {
+		compatible = "generic,audio-hdmi";
+		model = "audio-hdmi";
+		audio-cpu = <&audio_hdmi>;
+		hdmi-out;
+		status = "disabled";
+	};
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c0>;
+	status = "okay";
+
+	gpio_exp: gpio-expander@20 {
+		compatible = "generic,gpio-expander";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
+		status = "okay";
+
+		exp_pin0_hog {
+			gpio-hog;
+			gpios = <0 GPIO_ACTIVE_HIGH>;
+			input;
+			line-name = "EXP_GPIO_0";
+		};
+	};
+
+	eeprom@50 {
+		compatible = "generic,eeprom";
+		pagesize = <16>;
+		size = <256>;
+		reg = <0x50>;
+		status = "okay";
+	};
+
+	sensor@14 {
+		compatible = "generic,sensor";
+		reg = <0x14>;
+		interrupt-parent = <&gpio_exp>;
+		interrupts = <&gpio_exp 1 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	status = "okay";
+};
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi0>;
+	cs-gpios = <&gpio0 4 GPIO_ACTIVE_LOW>,
+		   <&gpio0 5 GPIO_ACTIVE_LOW>;
+	spi-max-frequency = <5000000>;
+	status = "okay";
+
+	spi_dev0: spi-device@0 {
+		compatible = "generic,spi-device";
+		reg = <0>;
+		vcc-supply = <&reg_spi_vcc>;
+		spi-max-frequency = <5000000>;
+	};
+
+	spi_dev1: spi-device@1 {
+		compatible = "generic,spi-device";
+		reg = <1>;
+		spi-max-frequency = <5000000>;
+	};
+};
+
+&spi1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_spi1>;
+	cs-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>,
+		   <&gpio0 7 GPIO_ACTIVE_LOW>;
+	spi-max-frequency = <10000000>;
+	status = "okay";
+
+	ext_can0: can@0 {
+		compatible = "generic,can-controller";
+		reg = <0>;
+		clocks = <&clk_ext>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+		spi-max-frequency = <10000000>;
+		status = "okay";
+	};
+
+	ext_can1: can@1 {
+		compatible = "generic,can-controller";
+		reg = <1>;
+		clocks = <&clk_ext>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+		spi-max-frequency = <10000000>;
+		status = "okay";
+	};
+};
+
+&can0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_can0>;
+	status = "okay";
+};
+
+&can1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_can1>;
+	status = "okay";
+};
+
+&ethernet0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_eth0>;
+	phy-mode = "rgmii";
+	phy-handle = <&ethphy0>;
+	phy-supply = <&reg_eth_phy>;
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethphy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <0>;
+			reset-gpios = <&gpio_exp 2 GPIO_ACTIVE_LOW>;
+			reset-assert-us = <10000>;
+			reset-deassert-us = <20000>;
+		};
+	};
+};
+
+&hdmi {
+	status = "disabled";
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart0>;
+	status = "okay";
+};
+
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart1>;
+	status = "okay";
+};
+
+&sdhci0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_sdhci0>;
+	vmmc-supply = <&reg_sd_vmmc>;
+	vqmmc-supply = <&reg_sd_vqmmc>;
+	bus-width = <4>;
+	status = "okay";
+};
+
+&pcie0 {
+	status = "okay";
+};
+
+&usb0 {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&usb1 {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&pinctrl {
+	pinctrl_uart0: uart0grp {
+		/* Generic UART0 RX/TX pin configuration */
+	};
+
+	pinctrl_uart1: uart1grp {
+		/* Generic UART1 RX/TX pin configuration */
+	};
+
+	pinctrl_sdhci0: sdhci0grp {
+		/* Generic 4-bit SD/MMC pin configuration */
+	};
+
+	pinctrl_i2c0: i2c0grp {
+		/* Generic I2C0 SCL/SDA pin configuration */
+	};
+
+	pinctrl_i2c1: i2c1grp {
+		/* Generic I2C1 SCL/SDA pin configuration */
+	};
+
+	pinctrl_eth0: eth0grp {
+		/* Generic RGMII Ethernet pin configuration */
+	};
+
+	pinctrl_can0: can0grp {
+		/* Generic CAN0 TX/RX pin configuration */
+	};
+
+	pinctrl_can1: can1grp {
+		/* Generic CAN1 TX/RX pin configuration */
+	};
+
+	pinctrl_spi0: spi0grp {
+		/* Generic SPI0 CLK/MOSI/MISO/CS pin configuration */
+	};
+
+	pinctrl_spi1: spi1grp {
+		/* Generic SPI1 CLK/MOSI/MISO/CS pin configuration */
+	};
+};

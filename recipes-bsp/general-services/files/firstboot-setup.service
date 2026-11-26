@@ -1,0 +1,26 @@
+[Unit]
+Description=first-boot setup
+After=local-fs.target network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/wasp-snmp/setup.done
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+
+
+# Optional environment override file.
+
+EnvironmentFile=-/etc/default/setup-env
+
+ExecStart=/usr/sbin/setup.sh
+
+ExecStartPost=/bin/mkdir -p /var/lib/setup
+ExecStartPost=/bin/touch /var/lib/wasp-snmp/setup.done
+
+TimeoutStartSec=300
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

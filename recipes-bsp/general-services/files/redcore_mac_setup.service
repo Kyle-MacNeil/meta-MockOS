@@ -1,0 +1,11 @@
+[Unit]
+Description=Run devmem commands and program Red Core MAC at startup
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/sbin/redcore_mac_setup.sh
+
+[Install]
+WantedBy=multi-user.target

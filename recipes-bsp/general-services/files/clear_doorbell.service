@@ -1,0 +1,11 @@
+[Unit]
+Description=Clear Doorbell once after reboot
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/wasp/clear_doorbell
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

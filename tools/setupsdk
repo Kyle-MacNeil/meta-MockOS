@@ -1,0 +1,23 @@
+if [ -n "$BASH_SOURCE" ]; then
+	export ROOT=$(readlink -f $(dirname "$BASH_SOURCE"))
+elif [ -n "$ZSH_NAME" ]; then
+	export ROOT=$(readlink -f $(dirname "$0"))
+else
+	export ROOT=$(readlink -f ${PWD})
+fi
+
+if [ -n "${BB_ENV_WHITELIST}" ]; then
+   echo "WARNING: BB_ENV_WHITELIST is obsolete, please use BB_ENV_PASSTHROUGH"
+   export BB_ENV_PASSTHROUGH="${BB_ENV_WHITELIST}"
+   unset BB_ENV_WHITELIST
+fi
+if [ -n "${BB_ENV_EXTRAWHITE}" ]; then
+   echo "WARNING: BB_ENV_EXTRAWHITE is obsolete, please use BB_ENV_PASSTHROUGH_ADDITIONS"
+   export BB_ENV_PASSTHROUGH_ADDITIONS="${BB_ENV_EXTRAWHITE}"
+   unset BB_ENV_EXTRAWHITE
+fi
+source $ROOT/sources/poky/oe-init-build-env "$@"
+
+export TEMPLATECONF=$ROOT/sources/meta-MockOS/conf/templates/
+cp $ROOT/sources/meta-layer/tools/build_image.sh $ROOT/build/
+cp $ROOT/sources/meta-layer/tools/run.yocto.sh $ROOT/build/

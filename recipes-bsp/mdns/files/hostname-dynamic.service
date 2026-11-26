@@ -1,0 +1,15 @@
+[Unit]
+Description=Dynamically set hostname based on end0 MAC address
+DefaultDependencies=no
+Wants=systemd-udev-settle.service network-pre.target
+After=systemd-udev-settle.service systemd-tmpfiles-setup.service
+Before=sysinit.target network-pre.target avahi-daemon.service systemd-hostnamed.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/hostname-dynamic.sh
+RemainAfterExit=yes
+TimeoutSec=45
+
+[Install]
+WantedBy=sysinit.target
